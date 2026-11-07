@@ -14,7 +14,7 @@ foreach ($user in $KeepList) {
     Set-LocalUser -Name $user -Password $Password
     Write-Output "Password changed: $user
 }
-Admin, Administrator, arthurdent, bartallen, ddagentuser, drstrange, drwho, loki, martymcfly, riphunter, sambeckett, theflash, tonystark, whiteteam
+
 
 #Single Line
 Get-LocalUser | Where-Object { $_.Name -notin $KeepList } | ForEach-Object { Remove-LocalUser -Name $_.Name; Write-Output "Removed: $($_.Name)" }; $KeepList | Where-Object { $_ -notin $ExcludeFromPasswordChange } | ForEach-Object { Set-LocalUser -Name $_ -Password $Password; Write-Output "Password changed: $_" }
