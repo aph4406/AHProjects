@@ -1,23 +1,29 @@
-$KeepList = @("Administrator", "drwho", "martymcfly", "arthurdent", "sambeckett", "loki", "riphunter", "theflash", "tonystark", "drstrange", "bartallen", "whiteteam", "blackteam", "grayteam", "datadog", "dd-dog", "ddagentuser", "dd-agent")
-$ExcludeFromPasswordChange = @("whiteteam", "blackteam", "grayteam", "datadog", "dd-dog", "ddagentuser", "dd-agent")
-$Password = ConvertTo-SecureString "ChangeMeNow!2025" -AsPlainText -Force
+$RemoveList = @("")
+$ExcludeFromPasswordChange = @("")
+$Password = Read-Host "Enter the new password" -AsSecureString
 
 # Remove extra users
-Get-LocalUser | Where-Object { $_.Name -notin $KeepList } | ForEach-Object {
-    Remove-LocalUser -Name $_.Name
-    Write-Output "Removed: $($_.Name)"
+$UsersToRemove = @(Get-LocalUser | Where-Object { $_.Name -in $RemoveList })
+foreach($Account in $UsersToRemove) {
+    try {
+        Remove-LocalUser -Name $Account.Name -ErrorAction Stop
+        Write-Output "Removed: $($Account.Name)"
+    }
+    catch {
+        Write-Warning "Could not remove '$($Account.Name)': $($_.Exception.Message)"
+        throw
+    }
 }
+$RemainingUsers = @(Get-LocalUser)
 
 # Change passwords
-foreach ($user in $KeepList) {
-    if ($user -in $ExcludeFromPasswordChange) { continue }
-    Set-LocalUser -Name $user -Password $Password
-    Write-Output "Password changed: $user
+foreach ($Account in $RemainingUsers) {
+    if ($Account.Name -in $ExcludeFromPasswordChange) { continue }
+    try {
+        Set-LocalUser -Name $Account.Name -Password $Password -ErrorAction Stop
+        Write-Output "Password changed: $($Account.Name)"
+    }
+    catch {
+        Write-Warning "Could not change password for '$($Account.Name)': $($_.Exception.Message)"
+    }
 }
-
-
-#Single Line
-Get-LocalUser | Where-Object { $_.Name -notin $KeepList } | ForEach-Object { Remove-LocalUser -Name $_.Name; Write-Output "Removed: $($_.Name)" }; $KeepList | Where-Object { $_ -notin $ExcludeFromPasswordChange } | ForEach-Object { Set-LocalUser -Name $_ -Password $Password; Write-Output "Password changed: $_" }
-
-
-
